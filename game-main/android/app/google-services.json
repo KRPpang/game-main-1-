@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10557567436",
+    "project_id": "depthsfb",
+    "storage_bucket": "depthsfb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10557567436:android:eb4c9cd9aa59bed07f2d69",
+        "android_client_info": {
+          "package_name": "com.depths.game"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtREV8uLjqCjh7dAmDMVqDK08s6N4msF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
