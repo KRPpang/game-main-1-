@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../services/user_data_manager.dart';
 import 'signup_page.dart';
+import 'home_page.dart'; // 👈 Make sure this is imported
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -35,15 +36,21 @@ class _LoginPageState extends State<LoginPage> {
       await UserDataManager().initUserData();
 
       if (!mounted) return;
-      Navigator.pop(context); // Close the dialog on successful login
+
+      // ✅ Replace dialog with HomePage
+      Navigator.of(context, rootNavigator: true).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed')),
+      );
     }
   }
 
   void openSignupDialog() {
-    Navigator.pop(context); // Close the Login dialog first
+    Navigator.pop(context);
     Future.delayed(Duration.zero, () {
       showDialog(
         context: context,

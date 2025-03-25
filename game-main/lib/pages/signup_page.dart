@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../services/user_data_manager.dart';
-import 'login_page.dart';
+import '../pages/login_page.dart';
+import '../pages/home_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -35,15 +36,21 @@ class _SignupPageState extends State<SignupPage> {
       await UserDataManager().initUserData();
 
       if (!mounted) return;
-      Navigator.pop(context); // Close the dialog on successful signup
+
+      // ✅ Replace dialog with HomePage
+      Navigator.of(context, rootNavigator: true).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Signup failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed')),
+      );
     }
   }
 
   void goToLogin() {
-    Navigator.pop(context); // Close Signup dialog first
+    Navigator.pop(context); // Close Signup dialog
     Future.delayed(Duration.zero, () {
       showDialog(
         context: context,
