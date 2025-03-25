@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import '../services/user_data_manager.dart';
+import 'login_page.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -29,39 +31,67 @@ class _SignupPageState extends State<SignupPage> {
         password: passwordController.text.trim(),
       );
 
-      // Log signup event
       FirebaseAnalytics.instance.logSignUp(signUpMethod: 'email');
+      await UserDataManager().initUserData();
 
       if (!mounted) return;
-
-      // Optionally navigate to another screen or show success message
-
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Signup failed')),
-      );
+      Navigator.pop(context); // Close the dialog on successful signup
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Something went wrong')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Signup failed')));
     }
   }
 
+  void goToLogin() {
+    Navigator.pop(context); // Close Signup dialog first
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: const SizedBox(
+            width: 320,
+            height: 420,
+            child: LoginPage(),
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(32),
+    return Material(
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
-            SizedBox(height: 16),
-            ElevatedButton(onPressed: signup, child: Text("Sign Up")),
+            Row(
+              children: [
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: signup, child: const Text("Sign Up")),
+            TextButton(
+              onPressed: goToLogin,
+              child: const Text("Already have an account? Log in"),
+            ),
           ],
         ),
       ),

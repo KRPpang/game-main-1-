@@ -31,41 +31,66 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordController.text.trim(),
       );
 
-      // Log login event
       FirebaseAnalytics.instance.logLogin(loginMethod: 'email');
-
-      // Initialize Firestore user data
       await UserDataManager().initUserData();
 
-      if (!mounted) return; // Ensure widget is still in the tree
-
-      // Optionally navigate to home or next screen here
-
+      if (!mounted) return;
+      Navigator.pop(context); // Close the dialog on successful login
     } catch (e) {
-      if (!mounted) return; // Ensure widget is still in the tree
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Login failed')));
     }
   }
 
-
+  void openSignupDialog() {
+    Navigator.pop(context); // Close the Login dialog first
+    Future.delayed(Duration.zero, () {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: const SizedBox(
+            width: 320,
+            height: 420,
+            child: SignupPage(),
+          ),
+        ),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(32),
+    return Material(
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: emailController, decoration: InputDecoration(labelText: 'Email')),
-            TextField(controller: passwordController, decoration: InputDecoration(labelText: 'Password'), obscureText: true),
-            SizedBox(height: 16),
-            ElevatedButton(onPressed: login, child: Text("Login")),
+            Row(
+              children: [
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+            ),
+            TextField(
+              controller: passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(onPressed: login, child: const Text("Login")),
             TextButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => SignupPage()));
-              },
-              child: Text("Don't have an account? Sign up"),
+              onPressed: openSignupDialog,
+              child: const Text("Don't have an account? Sign up"),
             ),
           ],
         ),

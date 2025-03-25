@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-// Optional for screen tracking
 import 'package:flutter/material.dart';
-import 'auth_gate.dart';
+import 'package:game/pages/startup_page.dart';
+import '../pages/startup_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Game Auth',
       theme: ThemeData.dark(),
-      home: AuthGate(),
+      home: StartupScreen(),
       navigatorObservers: [
         FirebaseAnalyticsObserver(analytics: analytics),
       ],
