@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../game/game_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -77,9 +78,20 @@ class _HomePageState extends State<HomePage> {
               onPressed: increaseScore,
               child: Text("Add +100 to Highest Score"),
             ),
+            SizedBox(height: 40),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => GameScreen()),
+                );
+              },
+              child: Text("Play Game"),
+            ),
           ],
         ),
       ),
+
     );
   }
 }

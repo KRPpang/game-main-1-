@@ -40,6 +40,9 @@ dependencies:
   firebase_storage: ^12.4.4
   fluttertoast: ^8.2.12
   firebase_analytics: ^11.4.4
+  flame: ^1.26.1
+  flame_forge2d: ^0.18.3
+  flame_tiled: ^2.0.3
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +70,8 @@ flutter:
   assets:
     - assets/images/
     - assets/audio/
+    - assets/maps/
+    - assets/tiles/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
