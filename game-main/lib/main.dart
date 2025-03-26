@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:game/pages/startup_page.dart';
-import '../pages/startup_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

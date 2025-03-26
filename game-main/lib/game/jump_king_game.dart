@@ -1,6 +1,4 @@
 import 'package:flame/game.dart';
-import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
 import 'player.dart';
 import 'level.dart';
 import 'line.dart';

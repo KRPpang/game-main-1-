@@ -1,6 +1,5 @@
 import 'player.dart';
 import 'brain.dart';
-import 'dart:math';
 
 class Population {
   int popSize;

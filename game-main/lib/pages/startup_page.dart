@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart'; // For Ticker
-import '../pages/login_page.dart';
 import '../pages/home_page.dart';
 
 class StartupScreen extends StatefulWidget {
