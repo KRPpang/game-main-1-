@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart'; // For Ticker
 import '../pages/login_page.dart';
+import '../pages/home_page.dart';
 
 class StartupScreen extends StatefulWidget {
   const StartupScreen({super.key});
@@ -144,7 +145,7 @@ class StartupScreenState extends State<StartupScreen> with SingleTickerProviderS
                         child: const SizedBox(
                           width: 320,
                           height: 420,
-                          child: LoginPage(),
+                          child: HomePage(),
                         ),
                       ),
                     );
