@@ -32,10 +32,9 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
 
   Player({double startX = 180, double startY = 600})
       : super(size: Vector2(64, 64), anchor: Anchor.bottomCenter) {
-    // Set the starting position so that the bottom of the sprite lines up with the ground.
-    position = Vector2(startX, startY);
-    // Scale up the sprite; note that we update our hitbox dimensions accordingly.
-    scale = Vector2.all(1.5); // Final visual size (96x96)
+    // Shift slightly downward to compensate for visual offset inside the sprite
+    position = Vector2(startX, startY + 8);
+    scale = Vector2.all(1.5); // Final visual scale (96x96)
   }
 
   @override
@@ -63,15 +62,13 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
 
     current = PlayerState.idle;
 
-    // Adjust the hitbox to align with the visible sprite.
-    // Multiply the hitbox size by the scale factor (1.5) so they match up.
-    const double scaleFactor = 1.5;
+    // ✅ Accurate hitbox for the visible body (not full sprite frame)
     add(RectangleHitbox()
-      ..size = Vector2(20 * scaleFactor, 30 * scaleFactor)
-    // Removing the upward offset so that the hitbox bottom aligns with the sprite's bottom (feet)
-      ..position = Vector2.zero()
+      ..size = Vector2(20, 30) // width and height of character's body, not the whole frame
+      ..position = Vector2(0, -12) // shift it up so the bottom of the hitbox matches the sprite's feet
       ..anchor = Anchor.bottomCenter
       ..collisionType = CollisionType.active);
+
   }
 
   @override
@@ -86,21 +83,18 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
     velocity.y += gravity * dt;
     position += velocity * dt;
 
-    // Use half the scaled hitbox width for accurate wall collision.
-    // The original hitbox width is 20px, so half is 10 (multiplied by the scale factor).
-    final double effectiveHalfWidth = (20 * scale.x) / 2;
-    if (position.x - effectiveHalfWidth < 0) {
-      position.x = effectiveHalfWidth;
+    // Use hitbox width (20px → half is 10) for accurate wall collision
+    if (position.x - 10 < 0) {
+      position.x = 10;
       velocity.x = -velocity.x * bounceDamping;
       hasBumped = true;
-    } else if (position.x + effectiveHalfWidth > 360) {
-      position.x = 360 - effectiveHalfWidth;
+    } else if (position.x + 10 > 360) {
+      position.x = 350;
       velocity.x = -velocity.x * bounceDamping;
       hasBumped = true;
     }
 
-    // Ground collision: Ensure that the player's bottom aligns with the platform at y = 600.
-    const double groundY = 600;
+    double groundY = 600;
     if (position.y >= groundY) {
       position.y = groundY;
       velocity.y = 0;
@@ -112,7 +106,6 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
       isOnGround = false;
     }
 
-    // Horizontal movement when on the ground and no jump input is held.
     if (isOnGround && !jumpHeld) {
       if (isLeftHeld) {
         velocity.x = -runSpeed;
@@ -123,14 +116,12 @@ class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef 
       }
     }
 
-    // Flip the sprite based on the direction of horizontal movement.
     if (velocity.x < 0) {
       scale.x = -scale.x.abs();
     } else if (velocity.x > 0) {
       scale.x = scale.x.abs();
     }
 
-    // Update animation state.
     if (!isOnGround && velocity.y < 0 && current != PlayerState.jumpUp) {
       current = PlayerState.jumpUp;
     } else if (velocity.x != 0 && isOnGround && current != PlayerState.walk) {
