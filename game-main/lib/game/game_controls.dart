@@ -18,10 +18,6 @@ class _GameControlsState extends State<GameControls> {
 
   @override
   Widget build(BuildContext context) {
-    bool leftActive = widget.game.player.leftHeld;
-    bool rightActive = widget.game.player.rightHeld;
-    bool jumpActive = widget.game.player.jumpHeld;
-
     return Positioned(
       bottom: 20,
       left: 20,
@@ -38,8 +34,8 @@ class _GameControlsState extends State<GameControls> {
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(
-                    color: leftActive ? Colors.blueAccent : Colors.blue,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.arrow_left, color: Colors.white),
@@ -53,8 +49,8 @@ class _GameControlsState extends State<GameControls> {
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(
-                    color: rightActive ? Colors.blueAccent : Colors.blue,
+                  decoration: const BoxDecoration(
+                    color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.arrow_right, color: Colors.white),
@@ -69,8 +65,8 @@ class _GameControlsState extends State<GameControls> {
             child: Container(
               width: 60,
               height: 60,
-              decoration: BoxDecoration(
-                color: jumpActive ? Colors.greenAccent : Colors.green,
+              decoration: const BoxDecoration(
+                color: Colors.green,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.arrow_upward, color: Colors.white),

@@ -3,22 +3,24 @@ import 'player.dart';
 import 'level.dart';
 import 'line.dart';
 import 'population.dart';
+import 'test_platform.dart';
 
 class JumpKingGame extends FlameGame {
-  // Toggle between single-player and AI mode.
   bool testingSinglePlayer = true;
   late Player player;
   late Population population;
 
   @override
   Future<void> onLoad() async {
-    // Create a simple level with a ground at y = 600.
+    // Default ground platform (your original logic)
     Level level = Level();
-    level.lines.add(Line(0, 600, 360, 600));
+    level.lines.add(Line(0, 600, 360, 600)); // ground line at bottom
     add(level);
 
+    // ✅ Add a test platform lower on screen to visually test alignment
+    add(TestPlatform());
+
     if (testingSinglePlayer) {
-      // Place the player at a visible location.
       player = Player(startX: 180, startY: 300);
       add(player);
     } else {
@@ -32,15 +34,10 @@ class JumpKingGame extends FlameGame {
   @override
   void update(double dt) {
     super.update(dt);
-    // When the player is on the ground and not charging a jump,
-    // allow normal walking.
-    if (player.isOnGround && !player.jumpHeld) {
-      if (player.leftHeld) player.moveLeft(dt);
-      if (player.rightHeld) player.moveRight(dt);
-    }
+    // Movement is handled in Player.update()
   }
 
-  // On-screen control callbacks.
+  // Input control hooks
   void onLeftPressed() => player.pressLeft();
   void onLeftReleased() => player.releaseLeft();
   void onRightPressed() => player.pressRight();

@@ -1,121 +1,154 @@
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
-
+import 'package:flame/sprite.dart';
+import 'package:flame/collisions.dart';
 import 'brain.dart';
 
-class Player extends PositionComponent {
-  // Physics state.
-  Vector2 velocity = Vector2.zero();
-  bool isOnGround = false;
+enum PlayerState {
+  idle,
+  walk,
+  jumpUp,
+}
 
-  // Jump-related variables.
+class Player extends SpriteAnimationGroupComponent<PlayerState> with HasGameRef {
+  Vector2 velocity = Vector2.zero();
+
+  bool isLeftHeld = false;
+  bool isRightHeld = false;
+  bool isOnGround = false;
   bool jumpHeld = false;
-  double jumpTimer = 0; // Increases while jump is held (charge)
-  bool leftHeld = false;
-  bool rightHeld = false;
-  // jumpDirection is determined when relezasing jump.
+  double jumpTimer = 0;
   int jumpDirection = 0;
+  bool hasBumped = false;
+
+  final double minJumpSpeed = 200;
+  final double maxJumpSpeed = 500;
+  final double maxJumpTimer = 30;
+  final double jumpSpeedHorizontal = 150;
+  final double gravity = 1000;
+  final double runSpeed = 200;
+  final double bounceDamping = 0.5;
 
   Brain? brain;
 
-  // New flag to indicate a wall collision.
-  bool hasBumped = false;
-
-  // Constants (tune these as needed).
-  final double minJumpSpeed = 200;  // vertical jump speed when barely charged.
-  final double maxJumpSpeed = 500;  // vertical jump speed when fully charged.
-  final double maxJumpTimer = 30;   // maximum charge value.
-  final double jumpSpeedHorizontal = 150; // horizontal jump speed.
-
-  // Gravity (pixels per second²).
-  final double gravity = 1000;
-  // Walking speed (pixels per second).
-  final double runSpeed = 200;
-  // Bounce damping factor when hitting walls.
-  final double bounceDamping = 0.5;
-
   Player({double startX = 180, double startY = 600})
-      : super(size: Vector2(50, 65), anchor: Anchor.topLeft) {
+      : super(size: Vector2(64, 64), anchor: Anchor.bottomCenter) {
+    // Set the starting position so that the bottom of the sprite lines up with the ground.
     position = Vector2(startX, startY);
+    // Scale up the sprite; note that we update our hitbox dimensions accordingly.
+    scale = Vector2.all(1.5); // Final visual size (96x96)
+  }
+
+  @override
+  Future<void> onLoad() async {
+    final idleSheet = SpriteSheet(
+      image: await gameRef.images.load('Idle.png'),
+      srcSize: Vector2(64, 64),
+    );
+
+    final walkSheet = SpriteSheet(
+      image: await gameRef.images.load('Walk.png'),
+      srcSize: Vector2(64, 64),
+    );
+
+    final jumpSheet = SpriteSheet(
+      image: await gameRef.images.load('Crouch.png'),
+      srcSize: Vector2(64, 64),
+    );
+
+    animations = {
+      PlayerState.idle: idleSheet.createAnimation(row: 0, stepTime: 0.4, to: 2),
+      PlayerState.walk: walkSheet.createAnimation(row: 0, stepTime: 0.12, to: 3),
+      PlayerState.jumpUp: jumpSheet.createAnimation(row: 0, stepTime: 0.12, to: 3),
+    };
+
+    current = PlayerState.idle;
+
+    // Adjust the hitbox to align with the visible sprite.
+    // Multiply the hitbox size by the scale factor (1.5) so they match up.
+    const double scaleFactor = 1.5;
+    add(RectangleHitbox()
+      ..size = Vector2(20 * scaleFactor, 30 * scaleFactor)
+    // Removing the upward offset so that the hitbox bottom aligns with the sprite's bottom (feet)
+      ..position = Vector2.zero()
+      ..anchor = Anchor.bottomCenter
+      ..collisionType = CollisionType.active);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
 
-    // If jump is held and on the ground, increase the jump timer.
     if (jumpHeld && isOnGround) {
-      jumpTimer += dt * 60; // assuming 60 fps as baseline.
+      jumpTimer += dt * 60;
       if (jumpTimer > maxJumpTimer) jumpTimer = maxJumpTimer;
     }
 
-    // Apply gravity.
     velocity.y += gravity * dt;
     position += velocity * dt;
 
-    // Handle horizontal boundaries (game area width = 360).
-    // Instead of clamping, we bounce off walls.
-    if (position.x < 0) {
-      position.x = 0;
+    // Use half the scaled hitbox width for accurate wall collision.
+    // The original hitbox width is 20px, so half is 10 (multiplied by the scale factor).
+    final double effectiveHalfWidth = (20 * scale.x) / 2;
+    if (position.x - effectiveHalfWidth < 0) {
+      position.x = effectiveHalfWidth;
       velocity.x = -velocity.x * bounceDamping;
       hasBumped = true;
-    } else if (position.x > 360 - size.x) {
-      position.x = 360 - size.x;
+    } else if (position.x + effectiveHalfWidth > 360) {
+      position.x = 360 - effectiveHalfWidth;
       velocity.x = -velocity.x * bounceDamping;
       hasBumped = true;
     }
 
-    // Ground collision: assume ground is at y = 600.
-    double groundY = 600;
-    if (position.y + size.y >= groundY) {
-      position.y = groundY - size.y;
+    // Ground collision: Ensure that the player's bottom aligns with the platform at y = 600.
+    const double groundY = 600;
+    if (position.y >= groundY) {
+      position.y = groundY;
       velocity.y = 0;
       isOnGround = true;
-      // Reset horizontal velocity upon landing to avoid lingering momentum.
       velocity.x = 0;
-      // Reset bumped flag on landing.
       hasBumped = false;
       if (!jumpHeld) jumpTimer = 0;
     } else {
       isOnGround = false;
     }
-  }
 
-  // Normal walking is allowed only when not charging a jump.
-  void moveLeft(double dt) {
+    // Horizontal movement when on the ground and no jump input is held.
     if (isOnGround && !jumpHeld) {
-      position.x -= runSpeed * dt;
+      if (isLeftHeld) {
+        velocity.x = -runSpeed;
+      } else if (isRightHeld) {
+        velocity.x = runSpeed;
+      } else {
+        velocity.x = 0;
+      }
+    }
+
+    // Flip the sprite based on the direction of horizontal movement.
+    if (velocity.x < 0) {
+      scale.x = -scale.x.abs();
+    } else if (velocity.x > 0) {
+      scale.x = scale.x.abs();
+    }
+
+    // Update animation state.
+    if (!isOnGround && velocity.y < 0 && current != PlayerState.jumpUp) {
+      current = PlayerState.jumpUp;
+    } else if (velocity.x != 0 && isOnGround && current != PlayerState.walk) {
+      current = PlayerState.walk;
+    } else if (velocity.x == 0 && isOnGround && current != PlayerState.idle) {
+      current = PlayerState.idle;
     }
   }
 
-  void moveRight(double dt) {
-    if (isOnGround && !jumpHeld) {
-      position.x += runSpeed * dt;
-    }
-  }
-
-  // Called by on-screen controls.
-  void pressLeft() {
-    leftHeld = true;
-  }
-
-  void releaseLeft() {
-    leftHeld = false;
-  }
-
-  void pressRight() {
-    rightHeld = true;
-  }
-
-  void releaseRight() {
-    rightHeld = false;
-  }
+  void pressLeft() => isLeftHeld = true;
+  void releaseLeft() => isLeftHeld = false;
+  void pressRight() => isRightHeld = true;
+  void releaseRight() => isRightHeld = false;
 
   void pressJump() {
     if (isOnGround && !jumpHeld) {
       jumpHeld = true;
       jumpTimer = 0;
-      // When starting a jump, we don't assign a horizontal component yet.
       jumpDirection = 0;
     }
   }
@@ -123,49 +156,18 @@ class Player extends PositionComponent {
   void releaseJump() {
     if (isOnGround && jumpHeld) {
       jumpHeld = false;
-      // Map jumpTimer to vertical jump speed.
-      double verticalJumpSpeed =
-          minJumpSpeed + ((maxJumpSpeed - minJumpSpeed) * (jumpTimer / maxJumpTimer));
-      // Determine horizontal component based on held flags.
+      final verticalJumpSpeed = minJumpSpeed +
+          ((maxJumpSpeed - minJumpSpeed) * (jumpTimer / maxJumpTimer));
       double horizontal = 0;
-      // Even if jump was pressed before directional keys, check flags now.
-      if (leftHeld && !rightHeld) {
+      if (isLeftHeld && !isRightHeld) {
         horizontal = -jumpSpeedHorizontal;
-      } else if (rightHeld && !leftHeld) {
+      } else if (isRightHeld && !isLeftHeld) {
         horizontal = jumpSpeedHorizontal;
       }
       velocity = Vector2(horizontal, -verticalJumpSpeed);
       jumpTimer = 0;
-      // Clear directional flags so no lingering momentum occurs.
-      leftHeld = false;
-      rightHeld = false;
-    }
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final paint = Paint()..color = Colors.blue;
-    canvas.drawRect(size.toRect(), paint);
-
-    // Optionally, draw an indicator if bumped.
-    if (hasBumped) {
-      final bumpPaint = Paint()..color = Colors.red;
-      canvas.drawRect(size.toRect(), bumpPaint..style = PaintingStyle.stroke..strokeWidth = 3);
-    }
-
-    // Draw a jump charge bar if jump is held.
-    if (jumpHeld) {
-      final barWidth = size.x;
-      const barHeight = 5.0;
-      double ratio = jumpTimer / maxJumpTimer;
-      if (ratio > 1) ratio = 1;
-      final chargedWidth = barWidth * ratio;
-      final chargePaint = Paint()..color = Colors.yellow;
-      canvas.drawRect(Rect.fromLTWH(0, -10, chargedWidth, barHeight), chargePaint);
-      final borderPaint = Paint()
-        ..color = Colors.black
-        ..style = PaintingStyle.stroke;
-      canvas.drawRect(Rect.fromLTWH(0, -10, barWidth, barHeight), borderPaint);
+      isLeftHeld = false;
+      isRightHeld = false;
     }
   }
 }
