@@ -1,3 +1,5 @@
+// lib/user_data_manager.dart
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -5,6 +7,8 @@ class UserDataManager {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Initializes the user document with default values
+  /// for the three game-mode high scores, settings, and achievements.
   Future<void> initUserData() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
@@ -15,53 +19,50 @@ class UserDataManager {
     if (!doc.exists) {
       await docRef.set({
         'progress': {
-          'highestScore': 0,
-          'highestPlatform': 0,
-        },
-        'unlocks': {
-          'unlockedSkins': ['default'],
-          'currentSkin': 'default',
+          'highestScore2x2': 0,
+          'highestScore3x3': 0,
+          'highestScoreUniform3x3': 0,
         },
         'settings': {
           'volume': 1.0,
           'isMuted': false,
         },
         'achievements': {
-          'first_jump': false,
-          'reached_1000': false,
-          'no_miss_run': false,
+          'first_high_score': false,
+          'milestone_high_score': false,
         },
       });
     }
   }
 
-  Future<void> updateScore(int score, int platform) async {
+  /// Increments the game high score for a specific mode by 1.
+  ///
+  /// [mode] should be one of: "2x2", "3x3", "uniform3x3".
+  Future<void> incrementGameScore(String mode) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
-    final docRef = _firestore.collection('users').doc(uid).collection('progress');
+    final docRef = _firestore.collection('users').doc(uid);
 
-    await _firestore.collection('users').doc(uid).update({
-      'progress.highestScore': FieldValue.increment(score),
-      'progress.highestPlatform': platform,
-    });
-  }
+    // Determine which field to increment based on the mode.
+    String fieldName;
+    switch (mode) {
+      case '2x2':
+        fieldName = 'progress.highestScore2x2';
+        break;
+      case '3x3':
+        fieldName = 'progress.highestScore3x3';
+        break;
+      case 'uniform3x3':
+        fieldName = 'progress.highestScoreUniform3x3';
+        break;
+      default:
+        fieldName = 'progress.highestScore2x2'; // Fallback mode.
+    }
 
-  Future<void> unlockSkin(String skinName) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-
-    await _firestore.collection('users').doc(uid).update({
-      'unlocks.unlockedSkins': FieldValue.arrayUnion([skinName])
-    });
-  }
-
-  Future<void> setAchievement(String achievementId) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return;
-
-    await _firestore.collection('users').doc(uid).update({
-      'achievements.$achievementId': true,
+    // Atomically increment by 1.
+    await docRef.update({
+      fieldName: FieldValue.increment(1),
     });
   }
 }
