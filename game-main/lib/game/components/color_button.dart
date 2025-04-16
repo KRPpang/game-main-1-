@@ -1,8 +1,7 @@
-// lib/game/components/color_button.dart
-
 import 'dart:async';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'package:flutter/material.dart';
 import '../../game/colors_in_mind.dart';
 
@@ -22,10 +21,7 @@ class ColorButton extends PositionComponent
     required this.color,
     required Vector2 position,
     required Vector2 size,
-  }) : super(
-    position: position,
-    size: size,
-  );
+  }) : super(position: position, size: size);
 
   @override
   Future<void> onLoad() async {
@@ -53,8 +49,16 @@ class ColorButton extends PositionComponent
 
   @override
   void onTapDown(TapDownEvent event) {
-    isPressed = true;
-    gameRef.onUserInput(id);
+    // Check if game input is allowed before processing the tap.
+    if (!gameRef.inputEnabled) return;
+
+    // Process the tap only if the button is not already pressed.
+    if (!isPressed) {
+      isPressed = true;
+      // Play a sound effect for player activation.
+      FlameAudio.play('Retro8.mp3');
+      gameRef.onUserInput(id);
+    }
   }
 
   @override
@@ -77,10 +81,14 @@ class ColorButton extends PositionComponent
     _isHovered = false;
   }
 
+  /// Plays the flash effect when the button is activated as part of the pattern.
+  /// The duration has been increased to 400ms so that the flash is slower
+  /// and the player can better see it.
   Future<void> flash() async {
+    FlameAudio.play('Retro8.mp3');
     final originalColor = paint.color;
     paint.color = Colors.white;
-    await Future.delayed(const Duration(milliseconds: 200));
+    await Future.delayed(const Duration(milliseconds: 400));
     paint.color = originalColor;
   }
 }
