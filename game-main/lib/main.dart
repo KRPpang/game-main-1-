@@ -1,14 +1,16 @@
-// lib/main.dart
-
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flame/flame.dart';
-import 'pages/startup_page.dart'; // or your home page
+import 'package:flame_audio/flame_audio.dart';
+import 'pages/startup_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Set the audio cache prefix so that sound files can be called by name only.
+  FlameAudio.audioCache.prefix = 'assets/sounds/';
 
   Flame.device.fullScreen();
   Flame.device.setPortrait();
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Pixel Game',
+      title: 'Colors In Mind',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -33,7 +35,6 @@ class MyApp extends StatelessWidget {
           bodyMedium: TextStyle(fontSize: 14),
         ),
       ),
-
       home: const StartupScreen(), // or HomePage()
       navigatorObservers: [
         FirebaseAnalyticsObserver(analytics: analytics),

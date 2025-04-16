@@ -1,5 +1,3 @@
-// lib/user_data_manager.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -7,8 +5,8 @@ class UserDataManager {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Initializes the user document with default values
-  /// for the three game-mode high scores, settings, and achievements.
+  /// Initializes the user document with default values for scores, settings,
+  /// achievements, and username.
   Future<void> initUserData() async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
@@ -28,23 +26,38 @@ class UserDataManager {
           'isMuted': false,
         },
         'achievements': {
-          'first_high_score': false,
-          'milestone_high_score': false,
+          // Achievements that unlock when a score of 25 is reached for each mode.
+          'score25_2x2': false,
+          'score25_3x3': false,
+          'score25_uniform3x3': false,
         },
+        'username': '',
       });
     }
   }
 
+  /// Updates or sets a specific achievement for the current user.
+  Future<void> setAchievement(String achievementKey, bool value) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+    final docRef = _firestore.collection('users').doc(uid);
+    await docRef.update({'achievements.$achievementKey': value});
+  }
+
+  /// Sets or updates the username for the current user.
+  Future<void> setUsername(String username) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+    final docRef = _firestore.collection('users').doc(uid);
+    await docRef.update({'username': username});
+  }
+
   /// Increments the game high score for a specific mode by 1.
-  ///
-  /// [mode] should be one of: "2x2", "3x3", "uniform3x3".
   Future<void> incrementGameScore(String mode) async {
     final uid = _auth.currentUser?.uid;
     if (uid == null) return;
 
     final docRef = _firestore.collection('users').doc(uid);
-
-    // Determine which field to increment based on the mode.
     String fieldName;
     switch (mode) {
       case '2x2':
@@ -57,10 +70,8 @@ class UserDataManager {
         fieldName = 'progress.highestScoreUniform3x3';
         break;
       default:
-        fieldName = 'progress.highestScore2x2'; // Fallback mode.
+        fieldName = 'progress.highestScore2x2';
     }
-
-    // Atomically increment by 1.
     await docRef.update({
       fieldName: FieldValue.increment(1),
     });

@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:game/pages/login_page.dart';
-import 'package:game/widgets/pixel_button.dart'; // ✅ Import the button
+import 'package:game/widgets/pixel_button.dart';
+import 'package:game/widgets/auth_popup.dart';
 
 class StartupScreen extends StatefulWidget {
   const StartupScreen({super.key});
@@ -118,22 +118,16 @@ class StartupScreenState extends State<StartupScreen>
                 ),
                 const SizedBox(height: 40),
 
-                // ✅ Pixel-style start button
+                // Updated Pixel-style start button with adjusted dimensions.
                 PixelButton(
                   label: 'START GAME',
+                  width: 180, // Thinner width
+                  height: 70, // Taller height
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => Dialog(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const SizedBox(
-                          width: 320,
-                          height: 420,
-                          child: LoginPage(),
-                        ),
-                      ),
+                      barrierDismissible: true,
+                      builder: (context) => const AuthPopup(),
                     );
                   },
                 ),
